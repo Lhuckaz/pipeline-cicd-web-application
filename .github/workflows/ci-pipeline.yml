@@ -3,6 +3,11 @@ on:
   push:
     branches:
       - main
+
+permissions:
+  contents: write
+  actions: read 
+
 jobs:
   ci:
     name: CI
@@ -46,16 +51,18 @@ jobs:
           name: react-build
           path: build
 
-      - name: Debug
-        run: ls -la
+      - name: Zip build folder
+        run: zip -r build-v1.0.${{ github.run_number }}.zip build
       
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/**
-          token: ${{ secrets.GH_PAT }}
+          files: build-v1.0.${{ github.run_number }}.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: v1.0.${{ github.run_number }}
           name: Release v1.0.${{ github.run_number }}
           body: |
             Automatic release from CI pipeline.
-            - Commit: ${{ env.git_short_sha }}
+            - Commit: ${{ github.sha }}
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
