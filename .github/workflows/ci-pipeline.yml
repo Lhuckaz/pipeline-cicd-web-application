@@ -36,30 +36,55 @@ jobs:
           path: build
 
   release:
-    name: Create GitHub Release
+    name: Release
     needs: ci
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: react-build
           path: build
+      
+      - name: Determine version bump type
+        id: check_commit
+        run: |
+          LAST_COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Last commit message: $LAST_COMMIT_MSG"
+
+          if echo "$LAST_COMMIT_MSG" | grep -iqE "BREAKING CHANGE"; then
+            echo "VERSION_BUMP=major" >> $GITHUB_ENV
+          elif [[ "$LAST_COMMIT_MSG" == "[feat]"* ]]; then
+            echo "VERSION_BUMP=minor" >> $GITHUB_ENV
+          elif [[ "$LAST_COMMIT_MSG" == "[fix]"* ]]; then
+            echo "VERSION_BUMP=patch" >> $GITHUB_ENV
+          else
+            echo "VERSION_BUMP=none" >> $GITHUB_ENV
+          fi
+
+      - name: Increment npm version (if applicable)
+        if: env.VERSION_BUMP != 'none'
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          npm version $VERSION_BUMP -m "chore(release): bump version to %s"
+          git push --follow-tags
+
+      - name: Get package.json version
+        id: package_version
+        run: echo "VERSION=$(jq -r .version package.json)" >> $GITHUB_ENV
 
       - name: Zip build folder
-        run: zip -r build-v1.0.${{ github.run_number }}.zip build
+        run: zip -r build-v${{ env.VERSION }}.zip build
       
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build-v1.0.${{ github.run_number }}.zip
+          files: build-v${{ env.VERSION }}.zip
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v1.0.${{ github.run_number }}
-          name: Release v1.0.${{ github.run_number }}
+          tag_name: v${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
           body: |
             Automatic release from CI pipeline.
             - Commit: ${{ github.sha }}
