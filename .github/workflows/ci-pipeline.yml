@@ -58,9 +58,9 @@ jobs:
 
           if echo "$LAST_COMMIT_MSG" | grep -iqE "BREAKING CHANGE"; then
             echo "VERSION_BUMP=major" >> $GITHUB_ENV
-          elif [[ "$LAST_COMMIT_MSG" == "[feat]"* ]]; then
+          elif [[ "$LAST_COMMIT_MSG" == "feat:"* ]]; then
             echo "VERSION_BUMP=minor" >> $GITHUB_ENV
-          elif [[ "$LAST_COMMIT_MSG" == "[fix]"* ]]; then
+          elif [[ "$LAST_COMMIT_MSG" == "fix:"* ]]; then
             echo "VERSION_BUMP=patch" >> $GITHUB_ENV
           else
             echo "VERSION_BUMP=none" >> $GITHUB_ENV
