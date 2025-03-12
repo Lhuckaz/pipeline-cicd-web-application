@@ -44,11 +44,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: react-build
+
+      - name: Debug
+        run: ls -la
       
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/**
+          files: build/*
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: v1.0.${{ github.run_number }}
           name: Release v1.0.${{ github.run_number }}
