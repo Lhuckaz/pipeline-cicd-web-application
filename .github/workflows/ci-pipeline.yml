@@ -71,7 +71,7 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          npm version $VERSION_BUMP -m "chore(release): bump version to %s"
+          npm version $VERSION_BUMP -m "chore(release): bump version to %s  [skip ci]"
           git push --follow-tags
 
       - name: Get package.json version
